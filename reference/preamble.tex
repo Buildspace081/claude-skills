@@ -1,0 +1,69 @@
+% ---------------------------------------------------------------
+% Preambolo per appunti universitari — skill "appunti"
+% Sostituiscilo pure col tuo: servono solo gli ambienti
+% defbox{titolo} ed example{titolo}.
+% ---------------------------------------------------------------
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[margin=2.5cm]{geometry}
+
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
+\usepackage[most]{tcolorbox}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
+
+% --- Definizioni ------------------------------------------------
+\newtcolorbox{defbox}[1]{%
+  enhanced, breakable,
+  colback=blue!4!white, colframe=blue!55!black,
+  fonttitle=\bfseries, title={#1},
+  boxrule=0.6pt, arc=2pt,
+  left=6pt, right=6pt, top=5pt, bottom=5pt,
+  before skip=0.30cm, after skip=0.30cm
+}
+
+% --- Esempi -----------------------------------------------------
+\newtcolorbox{example}[1]{%
+  enhanced, breakable,
+  colback=green!3!white, colframe=green!40!black,
+  fonttitle=\bfseries, title={#1},
+  boxrule=0.6pt, arc=2pt,
+  left=6pt, right=6pt, top=5pt, bottom=5pt,
+  before skip=0.30cm, after skip=0.30cm
+}
+
+% --- Riquadri opzionali ----------------------------------------
+\newtcolorbox{remarkbox}[1]{%
+  enhanced, breakable,
+  colback=orange!4!white, colframe=orange!60!black,
+  fonttitle=\bfseries, title={#1},
+  boxrule=0.6pt, arc=2pt, before skip=0.30cm, after skip=0.30cm
+}
+
+% --- Scorciatoie matematiche ------------------------------------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\Cov}{\operatorname{Cov}}
+\newcommand{\Bias}{\operatorname{Bias}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcommand{\argmax}{\operatorname*{arg\,max}}
+\newcommand{\indep}{\perp\!\!\!\perp}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
+\newcommand{\T}{^{\top}}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.35em}
