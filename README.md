@@ -86,6 +86,15 @@ nello style.md, ma tienili a mente se ne aggiunge di nuovi):
    lezioni). `00-index.tex` continua a essere generato ma solo per mostrare
    il piano in chat prima di lanciare i subagent.
 4. **Virgola in `noteboxtitle`** — vedi sopra.
+5. **Ordine dei capitoli sbagliato con più lezioni nello stesso `main.tex`**:
+   `assemble.sh` ordina i file `chapters/*.tex` alfabeticamente. Se lo SLUG non ha un
+   prefisso numerico, l'ordine alfabetico può non coincidere con l'ordine cronologico
+   (es. "probability-and-inference" < "prolusion" alfabeticamente, ma Prolusion è la
+   lezione 1 e Probability and Inference la lezione 2). Fix: lo SLUG ora mantiene
+   SEMPRE il numero iniziale del file PDF originale (`01-prolusion.tex`,
+   `02-probability-and-inference.tex`, ...), così l'ordine alfabetico = ordine
+   cronologico. Se rinomini a mano un file in `chapters/`, mantieni il prefisso a due
+   cifre.
 
 ## Setup multi-macchina (Mac ↔ Windows/WSL)
 

@@ -16,8 +16,15 @@ Non saltare fasi. Non chiedere conferme: l'utente vuole un `.tex` + `.pdf` finit
 - `--seq` opzionale — scrittura sequenziale (no subagent, vedi Fase 3).
 
 Deriva:
-- `SLUG` = nome PDF senza estensione, senza numero iniziale, minuscolo con trattini
-  (es. "01 Prolusion.pdf" → "prolusion").
+- `SLUG` = nome PDF senza estensione, minuscolo con trattini, **mantenendo il numero
+  iniziale a due cifre se presente** (es. "01 Prolusion.pdf" → "01-prolusion",
+  "02 Probability and Inference.pdf" → "02-probability-and-inference"). Se il PDF non
+  ha un numero iniziale, chiedilo all'utente o deducilo dall'ordine cronologico delle
+  lezioni già presenti in `chapters/` (`ls chapters/*.tex` e guarda i prefissi usati).
+  **Il numero è fondamentale**: `assemble.sh` ordina i capitoli alfabeticamente per nome
+  file, quindi senza prefisso numerico due lezioni potrebbero comparire nel PDF in un
+  ordine diverso da quello cronologico (es. "probability-and-inference" viene prima di
+  "prolusion" in ordine alfabetico pur essendo la lezione 2).
 - `OUTFILE` = `chapters/<SLUG>.tex` — il file finale di questa lezione.
 - `MAIN_TEX` = `./main.tex` se esiste, altrimenti `./main-<SLUG>.tex`.
 
