@@ -197,7 +197,9 @@ bash SKILL_DIR/scripts/assemble.sh "Files/main.tex"
 
 `assemble.sh` prende tutti i `Files/Chapters/*.tex` di contenuto (esclude `00-index.tex` e
 `tmp-*.tex`), li ordina per numero e li inserisce come `\input{Chapters/<file>.tex}` in
-`main.tex`. Non tocca titolo, autore, copertina e sommario.
+`main.tex`. Non tocca titolo, autore, copertina e sommario. Dopo il main genera anche un
+PDF per ogni capitolo in `Files/PDF/<N_slug>.pdf` (`build_chapters.sh`, stesso titolo e
+copertina, numerazione originale delle sezioni).
 
 Se la compilazione fallisce:
 1. Leggi `Files/build.log`
@@ -213,7 +215,7 @@ protetto nel preambolo, riformula il titolo senza virgole).
 ## Fase 5 — Report
 
 Risposta breve:
-- percorso `.tex` e `.pdf` (`Files/main.pdf`)
+- percorso `.tex` e `.pdf` (`Files/main.pdf` e `Files/PDF/<N_slug>.pdf`)
 - slide coperte / totali, quali saltate
 - eventuali punti dove hai integrato teoria non presente nelle slide
 

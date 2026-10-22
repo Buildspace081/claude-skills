@@ -19,6 +19,7 @@ Dopo lo scheletro, i PDF delle lezioni si gestiscono con `SKILL.md`.
     ├── Chapters/               ← un file per lezione: N_nome_lezione.tex
     │   ├── 1_intro.tex
     │   └── 2_transformers.tex
+    ├── PDF/                    ← PDF dei singoli capitoli (generati da assemble.sh)
     └── Images/
         ├── <copertina>.png     ← opzionale
         ├── L1/slide_001.png    ← slide estratte, una sottocartella per lezione

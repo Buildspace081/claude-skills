@@ -27,6 +27,7 @@ Ora è tutto automatico e parallelo.
     ├── main.tex
     ├── preamble.tex
     ├── Chapters/       ← N_nome_lezione.tex (numero senza zeri iniziali)
+    ├── PDF/            ← un PDF per capitolo (generati da assemble.sh)
     └── Images/         ← L<N>/slide_NNN.png, più eventuale copertina
 ```
 
@@ -49,7 +50,8 @@ Dettagli e procedura di creazione: **`NEW_COURSE.md`**.
    `Files/Chapters/<N_slug>.tex` (una `\section` + `\subsection`/`\subsubsection`
    per macro-argomento), i temporanei vengono cancellati.
 5. **Assemblaggio e compilazione**: `assemble.sh` aggiorna `main.tex` con
-   `\input{Chapters/<N_slug>.tex}` e compila con `latexmk -pdf`.
+   `\input{Chapters/<N_slug>.tex}`, compila con `latexmk -pdf` e genera i PDF dei singoli
+   capitoli in `Files/PDF/`.
 
 ## Struttura dei file della skill
 
@@ -66,7 +68,8 @@ claude-skills/
     ├── new_course.sh           — crea lo scheletro di un corso e compila a vuoto
     ├── pdfpages.sh             — conta le pagine di un PDF (con fallback multipli)
     ├── extract_images.sh       — estrae le slide come PNG via pdftoppm
-    └── assemble.sh             — aggiorna main.tex (ordine numerico) e compila con latexmk
+    ├── assemble.sh             — aggiorna main.tex (ordine numerico), compila e lancia build_chapters.sh
+    └── build_chapters.sh       — un PDF per capitolo in Files/PDF/
 ```
 
 ## Il preambolo dell'utente

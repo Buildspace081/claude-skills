@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # assemble.sh <MAIN_TEX>
-# Aggiorna main.tex con un \input{Chapters/<file>} per ogni capitolo (ordine numerico
+# Aggiorna main.tex (e genera i PDF dei capitoli) con un \input{Chapters/<file>} per ogni capitolo (ordine numerico
 # sul prefisso N_) e compila con latexmk.
 set -uo pipefail
 
@@ -59,6 +59,8 @@ if latexmk -pdf -interaction=nonstopmode -halt-on-error \
   echo "OK  ->  $PDF"
   latexmk -c -outdir="$MAINDIR" "$MAIN" >/dev/null 2>&1
   rm -f "$MAINDIR"/main.synctex.gz
+  # PDF dei singoli capitoli in Files/PDF/ (un errore qui non blocca il main)
+  bash "$(dirname "${BASH_SOURCE[0]}")/build_chapters.sh" "$MAIN" || echo "ATTENZIONE: qualche PDF di capitolo non compilato."
   exit 0
 else
   echo "COMPILAZIONE FALLITA. Errori:"
