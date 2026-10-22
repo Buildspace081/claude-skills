@@ -1,0 +1,23 @@
+\documentclass[11pt]{article}
+\input{preamble}
+
+\title{\Huge {{TITLE}}}
+\author{\Large {{AUTHOR}}}
+\date{\today}
+
+{{COVER}}
+
+\begin{document}
+\maketitle
+\counterwithin{figure}{subsection}
+\captionsetup[figure]{labelfont=bf}
+
+\pagebreak
+
+%% -- Sommario
+\tableofcontents
+\pagebreak
+
+%% -- Capitoli (gestiti da assemble.sh: non modificare a mano)
+
+\end{document}

@@ -1,69 +1,167 @@
-% ---------------------------------------------------------------
-% Preambolo per appunti universitari — skill "appunti"
-% Sostituiscilo pure col tuo: servono solo gli ambienti
-% defbox{titolo} ed example{titolo}.
-% ---------------------------------------------------------------
-\documentclass[11pt,a4paper]{article}
-
+% --- Encoding e font ---
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[english]{babel}
-\usepackage[margin=2.5cm]{geometry}
+\usepackage{lmodern}
 
-\usepackage{amsmath,amssymb,amsthm,mathtools}
-\usepackage{bm}
-\usepackage{booktabs}
-\usepackage{array}
-\usepackage{enumitem}
+% --- Matematica ---
+\usepackage{amsmath,amssymb,amsfonts,gensymb,amsthm}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\usepackage{centernot}
+% --- Grafica, colori, float ---
 \usepackage{graphicx}
-\usepackage{xcolor}
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{float}
+% --- Liste e ambienti ---
+\usepackage{enumitem}
+% --- Caption, numerazione figure ---
+\usepackage{caption}
+\usepackage{chngcntr}
+% --- Caption, numerazione figure ---
+\captionsetup{font=small, labelfont=bf, textfont=it}
+% --- Indice/TOC personalizzazione (se ti serve) ---
+\usepackage{tocloft}
+% --- colorbox
 \usepackage[most]{tcolorbox}
+%--- spazio tra le riga
+\usepackage{parskip}
+\setlength{\parskip}{0.15cm}
+% Elenchi compatti:
+\setlist[itemize]{ topsep=2pt, itemsep=0pt, parsep=0pt}
+\setlist[enumerate]{topsep=2pt, itemsep=0pt, parsep=0pt}
+
+% Per il codice
+\usepackage{listings}
+% Definisci i colori esatti di VS Code (tema Light+)
+\definecolor{vscodeblue}{RGB}{0,0,255}          % Keywords
+\definecolor{vscodeorange}{RGB}{163,21,21}      % Strings
+\definecolor{vscodegreen}{RGB}{0,128,0}         % Comments
+\definecolor{vscodepurple}{RGB}{197,134,192}    % Control flow e import
+\definecolor{vscodeyellow}{RGB}{121,94,38}      % Functions
+\definecolor{vscodebg}{RGB}{255,255,255}        % Background
+\definecolor{vscodeframe}{RGB}{200,200,200}     % Frame
+
+% Configurazione Python stile VS Code
+\lstdefinestyle{vscode}{
+    language=Python,
+    alsoletter={.},
+    backgroundcolor=\color{vscodebg},
+    commentstyle=\color{vscodegreen}\itshape,
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{vscodeorange},
+    basicstyle=\ttfamily\small,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=8pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    frame=single,
+    rulecolor=\color{vscodeframe},
+    framesep=10pt,
+    xleftmargin=15pt,
+    framexleftmargin=15pt,
+    % Resetta tutte le keyword e ridefiniscile
+    morekeywords={},
+    deletekeywords={for,if,while,else,elif,return,break,continue,try,except,finally,with,as,pass,raise,assert,import,from},
+    % Keywords blu
+    keywordstyle=\color{vscodeblue}\bfseries,
+    morekeywords={def,class,lambda,and,or,not,is,in,del,global,nonlocal,yield,await,async,True,False,None,self},
+    % Control flow VIOLA
+    keywordstyle=[2]\color{vscodepurple}\bfseries,
+    morekeywords=[2]{for,if,while,else,elif,return,break,continue,try,except,finally,with,as,pass,raise,assert,import,from},
+    % Funzioni
+    emph={sqrt,print,input,range,len,str,int,float,list,dict,set,tuple},
+    emphstyle=\color{vscodeyellow}
+}
+\lstset{style=vscode}
+
+%-- for definition (POI definisci defbox)
+\newtcolorbox{defbox}[1]{
+    colback=gray!10,
+    colframe=gray!50,
+    fonttitle=\bfseries,
+    coltitle=black,
+    title=\mbox{#1},  % Cambiato qui
+    sharp corners,
+    boxrule=0.5pt, breakable}
+%-----
+%-----
+\usepackage{needspace}
+%---- Notebox definition \begin{noteboxtitle}{title}
+\newtcolorbox{noteboxtitle}[1]{
+    colback=white,
+    colframe=black!90,
+    boxrule=0.8pt,
+    arc=3mm,
+    title=#1,
+    fonttitle=\bfseries,
+    left=5pt,
+    right=5pt,
+    top=5pt,
+    bottom=5pt,
+      breakable
+}
+
+% --- comment
+\usepackage{comment}
+% --- Margini ---
+\usepackage[a4paper,
+    top=2.5cm,
+    bottom=2.5cm,
+    left=2.5cm,
+    right=2.5cm,
+    bindingoffset=0.5cm
+]{geometry}
+% --- Titolo con immagine (opzionale) ---
+\usepackage{titlepic} % solo se usi \titlepic
+% --- Hyperref VA QUASI SEMPRE PER ULTIMO ---
 \usepackage{hyperref}
-\hypersetup{colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black}
+\usepackage{adjustbox}
+\usepackage{xltabular}
+\usepackage{booktabs}
+\raggedbottom
 
-% --- Definizioni ------------------------------------------------
-\newtcolorbox{defbox}[1]{%
-  enhanced, breakable,
-  colback=blue!4!white, colframe=blue!55!black,
-  fonttitle=\bfseries, title={#1},
-  boxrule=0.6pt, arc=2pt,
-  left=6pt, right=6pt, top=5pt, bottom=5pt,
-  before skip=0.30cm, after skip=0.30cm
-}
 
-% --- Esempi -----------------------------------------------------
-\newtcolorbox{example}[1]{%
-  enhanced, breakable,
-  colback=green!3!white, colframe=green!40!black,
-  fonttitle=\bfseries, title={#1},
-  boxrule=0.6pt, arc=2pt,
-  left=6pt, right=6pt, top=5pt, bottom=5pt,
-  before skip=0.30cm, after skip=0.30cm
-}
+%---Per spezzare le tabelle
+\usepackage{longtable}
 
-% --- Riquadri opzionali ----------------------------------------
-\newtcolorbox{remarkbox}[1]{%
-  enhanced, breakable,
-  colback=orange!4!white, colframe=orange!60!black,
-  fonttitle=\bfseries, title={#1},
-  boxrule=0.6pt, arc=2pt, before skip=0.30cm, after skip=0.30cm
-}
 
-% --- Scorciatoie matematiche ------------------------------------
-\newcommand{\R}{\mathbb{R}}
-\newcommand{\E}{\mathbb{E}}
-\newcommand{\Prob}{\mathbb{P}}
-\newcommand{\Var}{\operatorname{Var}}
-\newcommand{\Cov}{\operatorname{Cov}}
-\newcommand{\Bias}{\operatorname{Bias}}
-\newcommand{\argmin}{\operatorname*{arg\,min}}
-\newcommand{\argmax}{\operatorname*{arg\,max}}
-\newcommand{\indep}{\perp\!\!\!\perp}
-\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
-\newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
-\newcommand{\T}{^{\top}}
+% --- New structure for Example
+\newtheoremstyle{smallexample}
+  {3pt}% Space above
+  {3pt}% Space below
+  {\small}% Body font - testo dell'esempio piccolo
+  {}% Indent amount
+  {\small\bfseries}% Theorem head font - "Example 18.1" piccolo e grassetto
+  {.}% Punctuation after theorem head
+  {.5em}% Space after theorem head
+  {}% Theorem head spec
+\theoremstyle{smallexample}
+\newtheorem{example}{Example}[section]
+\usepackage[version=4]{mhchem}
+\graphicspath{{Images/}}
 
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{0.35em}
+ %% --- Definizione prima pagina 
+
+
+%%___NEW COMMAND
+\newcommand{\vs}{\vspace{0.2\baselineskip}}
+
+
+
+%%%--- Librerie per grafici
+
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, shapes.geometric, calc}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable, skins}
+
+
+
+\parindent 0px
+

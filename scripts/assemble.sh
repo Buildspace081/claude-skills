@@ -1,97 +1,52 @@
 #!/usr/bin/env bash
-# assemble.sh <MAIN_TEX> <ESAME> <TITOLO_LEZIONE>
-# Aggiorna main.tex con \input{chapters/sec-NN} e compila con latexmk.
+# assemble.sh <MAIN_TEX>
+# Aggiorna main.tex con un \input{Chapters/<file>} per ogni capitolo (ordine numerico
+# sul prefisso N_) e compila con latexmk.
 set -uo pipefail
 
-MAIN="${1:?uso: assemble.sh <main.tex> <esame> <titolo>}"
-ESAME="${2:-Course}"
-TITOLO="${3:-Lecture notes}"
+MAIN="${1:?uso: assemble.sh <Files/main.tex>}"
+[ -f "$MAIN" ] || { echo "ERRORE: '$MAIN' non esiste (crea il corso con new_course.sh)" >&2; exit 1; }
 
 MAINDIR=$(dirname "$(realpath "$MAIN")")
-CHAPTERS="$MAINDIR/chapters"
-
+CHAPTERS="$MAINDIR/Chapters"
 [ -d "$CHAPTERS" ] || { echo "ERRORE: '$CHAPTERS' non trovata" >&2; exit 1; }
 
-# Prende tutti i .tex non speciali: esclude 00-index.tex e tmp-*.tex
-SECS=$(find "$CHAPTERS" -maxdepth 1 -name '*.tex' -size +0 \
-  ! -name '00-index.tex' ! -name 'tmp-*.tex' | sort)
-[ -n "$SECS" ] || { echo "ERRORE: nessun file .tex di contenuto in chapters/" >&2; exit 1; }
-N_SECS=$(echo "$SECS" | wc -l | tr -d ' ')
-
-# Tutta la logica di update/creazione in Python (evita problemi con \n shell)
-python3 - "$MAIN" "$MAINDIR" "$TITOLO" <<'PY'
+# Tutta la logica di aggiornamento in Python (ordinamento numerico, regex robuste)
+python3 - "$MAIN" "$CHAPTERS" <<'PY'
 import sys, re, os, glob
 
-main_path   = sys.argv[1]
-maindir     = sys.argv[2]
-titolo      = sys.argv[3]
-chapters    = os.path.join(maindir, "chapters")
+main_path, chapters = sys.argv[1], sys.argv[2]
 
-# Raccoglie i file di contenuto: tutti i .tex tranne 00-index.tex e tmp-*.tex
-all_tex = sorted(glob.glob(os.path.join(chapters, "*.tex")))
-sec_files = [f for f in all_tex
-             if os.path.basename(f) != "00-index.tex"
-             and not os.path.basename(f).startswith("tmp-")]
-sec_names = [os.path.splitext(os.path.basename(f))[0] for f in sec_files]
+def key(path):
+    # "10_foo.tex" dopo "2_foo.tex": ordina sul numero iniziale, poi sul nome
+    name = os.path.basename(path)
+    m = re.match(r'(\d+)', name)
+    return (int(m.group(1)) if m else 10**9, name)
 
-# Costruisce il blocco da inserire (tutto qui, niente variabili shell con \n)
-# Niente indice manuale: il \tableofcontents genera già l'elenco dei capitoli.
-lines = []
-lines.append(r"\tableofcontents")
-lines.append(r"\newpage")
-lines.append("")
-for name in sec_names:
-    lines.append(f"\\input{{chapters/{name}}}")
-    lines.append(r"\pagebreak")
-lines.append("")
-block = "\n".join(lines) + "\n"
+files = [f for f in glob.glob(os.path.join(chapters, '*.tex'))
+         if os.path.getsize(f) > 0
+         and os.path.basename(f) != '00-index.tex'
+         and not os.path.basename(f).startswith('tmp-')]
+files.sort(key=key)
+if not files:
+    print("ERRORE: nessun file .tex di contenuto in Chapters/", file=sys.stderr)
+    sys.exit(1)
 
-if os.path.exists(main_path):
-    with open(main_path, 'r') as f:
-        content = f.read()
+content = open(main_path).read()
 
-    # Aggiorna titolo se ancora placeholder
-    if r'\Huge Text Mining' in content:
-        content = content.replace(r'\Huge Text Mining', f'\\Huge {titolo}')
-        print(f"  -> Titolo aggiornato: '{titolo}'")
+# Rimuove gli \input{Chapters/...} esistenti (e il \pagebreak che li segue)
+content = re.sub(r'\\input\{Chapters/[^}]*\}[ \t]*\n(\\pagebreak[ \t]*\n)?(\s*\n)*', '', content)
 
-    # Rimuovi blocchi inseriti da run precedenti
-    content = re.sub(r'\\section\*\{Overview\}.*?\\newpage\s*\n', '', content, flags=re.DOTALL)
-    content = re.sub(r'\\tableofcontents.*?\\newpage\s*\n', '', content, flags=re.DOTALL)
-    content = re.sub(r'\\input\{chapters/[^}]+\}\s*\n', '', content)
-    content = re.sub(r'\\input\{\}\s*\n', '', content)
-    # Rimuovi il TOC standalone del template originale PRIMA di togliere i \pagebreak isolati
-    content = re.sub(r'(%% -- Sommario\s*\n)?\\tableofcontents\s*\n(\\pagebreak|\\newpage)?\s*\n', '\n', content)
-    content = re.sub(r'^\\pagebreak\s*\n', '', content, flags=re.MULTILINE)
-
-    # Inserisce il blocco prima di \end{document}
-    if r'\end{document}' in content:
-        content = content.replace(r'\end{document}', block + r'\end{document}')
-    else:
-        content += "\n" + block + "\n\\end{document}\n"
-
-    with open(main_path, 'w') as f:
-        f.write(content)
-    print(f"  -> main.tex aggiornato ({len(sec_names)} sezioni)")
-
-else:
-    # Crea un main.tex minimale
-    new_content  = "\\documentclass[11pt]{article}\n"
-    new_content += "\\input{preamble}\n\n"
-    new_content += f"\\title{{\\Huge {titolo}}}\n"
-    new_content += "\\author{\\Large Gennaro Basile}\n"
-    new_content += "\\date{\\today}\n\n"
-    new_content += "\\begin{document}\n"
-    new_content += "\\maketitle\n"
-    new_content += "\\pagebreak\n\n"
-    new_content += block
-    new_content += "\\end{document}\n"
-    with open(main_path, 'w') as f:
-        f.write(new_content)
-    print(f"  -> main.tex creato ({len(sec_names)} sezioni)")
+block = ''.join(f"\\input{{Chapters/{os.path.basename(f)}}}\n\\pagebreak\n\n" for f in files)
+if r'\end{document}' not in content:
+    print("ERRORE: \\end{document} mancante in main.tex", file=sys.stderr)
+    sys.exit(1)
+content = content.replace(r'\end{document}', block + r'\end{document}')
+open(main_path, 'w').write(content)
+print(f"  -> main.tex aggiornato ({len(files)} capitoli): "
+      + ", ".join(os.path.basename(f) for f in files))
 PY
-
-echo "main.tex ha $(wc -l < "$MAIN" | tr -d ' ') righe, ${N_SECS} sezioni."
+[ $? -eq 0 ] || exit 1
 
 command -v latexmk >/dev/null 2>&1 || {
   echo "latexmk non trovato: compila a mano '$MAIN'."; exit 0; }
@@ -103,6 +58,7 @@ if latexmk -pdf -interaction=nonstopmode -halt-on-error \
   PDF="${MAIN%.tex}.pdf"
   echo "OK  ->  $PDF"
   latexmk -c -outdir="$MAINDIR" "$MAIN" >/dev/null 2>&1
+  rm -f "$MAINDIR"/main.synctex.gz
   exit 0
 else
   echo "COMPILAZIONE FALLITA. Errori:"

@@ -1,6 +1,6 @@
 ---
 name: appunti
-description: Trasforma le slide PDF di una lezione universitaria in appunti completi in LaTeX (in inglese), in un unico file chapters/<slug>.tex con sezioni e sottosezioni, aggiornando main.tex. Usare quando l'utente indica un PDF di slide e chiede appunti, note, riassunto in .tex, oppure invoca /appunti.
+description: Trasforma le slide PDF di una lezione universitaria in appunti completi in LaTeX (in inglese), in un unico file Files/Chapters/<N_slug>.tex con sezioni e sottosezioni, aggiornando Files/main.tex. Funziona per qualsiasi corso. Usare quando l'utente indica un PDF di slide e chiede appunti, note, riassunto in .tex, oppure invoca /appunti. Per creare un corso nuovo leggi prima NEW_COURSE.md.
 ---
 
 # Appunti LaTeX da slide universitarie
@@ -8,43 +8,60 @@ description: Trasforma le slide PDF di una lezione universitaria in appunti comp
 Pipeline: **indice → immagini → scrittura parallela → merge in file unico → compilazione**.
 Non saltare fasi. Non chiedere conferme: l'utente vuole un `.tex` + `.pdf` finiti.
 
+## Percorsi
+
+`SKILL_DIR` = `/Users/gennarobasile/Desktop/buildspace/Venture-studio/claude-skills`
+(percorso ufficiale, solo Mac). Tutti gli script e i file di riferimento stanno lì.
+
+Struttura di ogni corso (la cartella del corso è la cwd, `COURSE`):
+```
+<COURSE>/
+└── Files/
+    ├── main.tex
+    ├── preamble.tex
+    ├── Chapters/      ← un .tex per lezione: N_nome_lezione.tex
+    └── Images/        ← slide_NNN.png + eventuale copertina
+```
+Se `Files/main.tex` non esiste, il corso non è stato creato: **leggi `NEW_COURSE.md`**
+ed esegui prima quella procedura, poi torna qui.
+
 ## Input
 
 - `PDF` — percorso delle slide. Se non indicato, cerca PDF nel cwd; se più di uno, chiedi.
-- `ESAME` — nome del corso. Se non indicato, deducilo dal nome file e comunicalo.
+- `ESAME` — nome del corso. Se non indicato, deducilo dalla cartella del corso e comunicalo.
 - `RANGE` opzionale — `--from N --to M` per una parte delle slide.
 - `--seq` opzionale — scrittura sequenziale (no subagent, vedi Fase 3).
 
 Deriva:
-- `SLUG` = nome PDF senza estensione, minuscolo con trattini, **mantenendo il numero
-  iniziale a due cifre se presente** (es. "01 Prolusion.pdf" → "01-prolusion",
-  "02 Probability and Inference.pdf" → "02-probability-and-inference"). Se il PDF non
-  ha un numero iniziale, chiedilo all'utente o deducilo dall'ordine cronologico delle
-  lezioni già presenti in `chapters/` (`ls chapters/*.tex` e guarda i prefissi usati).
-  **Il numero è fondamentale**: `assemble.sh` ordina i capitoli alfabeticamente per nome
-  file, quindi senza prefisso numerico due lezioni potrebbero comparire nel PDF in un
-  ordine diverso da quello cronologico (es. "probability-and-inference" viene prima di
-  "prolusion" in ordine alfabetico pur essendo la lezione 2).
-- `OUTFILE` = `chapters/<SLUG>.tex` — il file finale di questa lezione.
-- `MAIN_TEX` = `./main.tex` se esiste, altrimenti `./main-<SLUG>.tex`.
+- `N` = numero della lezione. Preferisci il numero iniziale nel nome del PDF
+  ("03 Transformers.pdf" → 3). Se manca, deducilo da `ls Files/Chapters/` (ultimo
+  numero + 1) e chiedi all'utente solo se resta ambiguo.
+- `SLUG` = `N_nome_lezione`: numero intero **senza zeri iniziali** + underscore +
+  titolo in minuscolo con underscore (es. "Intro to the Course" → `1_intro_to_the_course`).
+  `assemble.sh` ordina i capitoli sul numero, quindi `10_` viene dopo `9_`.
+- `OUTFILE` = `Files/Chapters/<SLUG>.tex` — il file finale di questa lezione.
+- `MAIN_TEX` = `Files/main.tex`.
 
 ---
 
 ## Fase 0 — Setup
 
 ```bash
-bash ~/.claude/skills/appunti/scripts/pdfpages.sh "<PDF>"
-mkdir -p chapters Images
+bash SKILL_DIR/scripts/pdfpages.sh "<PDF>"
+mkdir -p Files/Chapters Files/Images
 ```
 
-**Preambolo** (priorità): `./preamble.tex` → `../preamble.tex` → copia da
-`~/.claude/skills/appunti/reference/preamble.tex` (avvisa in una riga).
+Il preambolo è `Files/preamble.tex` (creato da `new_course.sh`). Non modificarlo e non
+sostituirlo. Se manca, il corso non è stato creato: vedi `NEW_COURSE.md`.
 
-**Estrazione immagini:**
+**Estrazione immagini** (richiede `pdftoppm`: `brew install poppler`):
 ```bash
-bash ~/.claude/skills/appunti/scripts/extract_images.sh "<PDF>" "./Images" <FROM> <TO>
+bash SKILL_DIR/scripts/extract_images.sh "<PDF>" "Files/Images/L<N>" <FROM> <TO>
 ```
-Idempotente: salta se le immagini esistono già.
+Idempotente: salta se le immagini esistono già. Ogni lezione ha la **sua sottocartella**
+`Images/L<N>/` perché i file si chiamano tutti `slide_NNN.png` e altrimenti lezioni
+diverse si sovrascriverebbero. Nel LaTeX: `\includegraphics{L<N>/slide_NNN}`
+(`\graphicspath{{Images/}}` nel preambolo risolve il resto).
 
 ---
 
@@ -52,10 +69,9 @@ Idempotente: salta se le immagini esistono già.
 
 Leggi **tutto** il PDF (tool Read, `pages`, max 20 per chiamata) e produci:
 
-**`chapters/00-index.tex`** — panoramica in `\begin{itemize}...\end{itemize}`, **solo per
-mostrarla all'utente in chat** (Fase 1). Non finisce mai nel PDF: `\tableofcontents` in
-main.tex genera già l'elenco dei capitoli automaticamente, un indice manuale sarebbe
-ridondante e andrebbe aggiornato a mano ogni volta che si aggiunge una lezione.
+**`Files/Chapters/00-index.tex`** — panoramica in `\begin{itemize}...\end{itemize}`, **solo per
+mostrarla all'utente in chat**. Non finisce mai nel PDF: `\tableofcontents` in `main.tex`
+genera già l'elenco dei capitoli, e `assemble.sh` ignora questo file.
 ```latex
 \begin{itemize}
   \item \textbf{Markov Decision Processes} \textit{(slides 3--14)}
@@ -66,7 +82,7 @@ ridondante e andrebbe aggiornato a mano ogni volta che si aggiunge una lezione.
 \end{itemize}
 ```
 
-**`chapters/plan.json`** — piano dei chunk per i subagent:
+**`Files/Chapters/plan.json`** — piano dei chunk per i subagent:
 ```json
 [{"n":1,"title":"Markov Decision Processes","from":3,"to":14},
  {"n":2,"title":"Dynamic Programming","from":15,"to":28}]
@@ -84,7 +100,7 @@ Mostra l'indice e il piano all'utente in forma compatta.
 
 ## Fase 2 — Stile
 
-Leggi `~/.claude/skills/appunti/reference/style.md` prima di scrivere qualsiasi LaTeX.
+Leggi `SKILL_DIR/reference/style.md` prima di scrivere qualsiasi LaTeX.
 Punti critici da tenere a mente per ogni subagent:
 - Struttura: `\section{}` una sola volta (solo il primo chunk), poi `\subsection{}` e
   `\subsubsection{}` per tutto il resto
@@ -96,7 +112,7 @@ Punti critici da tenere a mente per ogni subagent:
 
 ## Fase 3 — Scrittura parallela in file temporanei
 
-Ogni chunk del piano produce un file temporaneo `chapters/tmp-NN.tex` (NN a due cifre).
+Ogni chunk del piano produce un file temporaneo `Files/Chapters/tmp-NN.tex` (NN a due cifre).
 
 **Resume**: salta i chunk il cui `tmp-NN.tex` esiste già ed è non vuoto.
 
@@ -104,7 +120,7 @@ Ogni chunk del piano produce un file temporaneo `chapters/tmp-NN.tex` (NN a due 
 Prompt per ogni subagent (sostituisci i segnaposto):
 
 ---
-> Leggi `~/.claude/skills/appunti/reference/style.md` e rispettalo alla lettera.
+> Leggi `SKILL_DIR/reference/style.md` e rispettalo alla lettera.
 >
 > Leggi il PDF `<PDF>` pagine `<from>`-`<to>` (tool Read, parametro `pages`).
 >
@@ -129,14 +145,14 @@ Prompt per ogni subagent (sostituisci i segnaposto):
 > ```latex
 > \begin{figure}[H]
 >     \centering
->     \includegraphics[width=0.85\textwidth]{slide_<NNN>}
+>     \includegraphics[width=0.85\textwidth]{L<N>/slide_<NNN>}
 >     \caption{Descrizione in inglese.}
 >     \captionsetup{font=footnotesize}
 > \end{figure}
 > ```
 > `width=0.85\textwidth` per diagrammi a piena pagina, `width=0.60\textwidth` per figure piccole.
 >
-> Scrivi il risultato con il tool Write in `chapters/tmp-<NN>.tex`.
+> Scrivi il risultato con il tool Write in `Files/Chapters/tmp-<NN>.tex`.
 > Non produrre preambolo, non `\begin{document}`.
 > Risposta finale: solo `OK tmp-NN, slides <from>-<to>, <righe> righe, <N_fig> figure`.
 ---
@@ -151,22 +167,22 @@ Più lenta, più coerente nello stile — consigliala se l'utente segnala disomo
 Dopo che tutti i subagent hanno completato:
 
 ```bash
-python3 - "chapters" "<SLUG>" <<'PY'
-import os, glob
+python3 - "Files/Chapters" "<SLUG>" <<'PY'
+import os, glob, sys
 
-chapters = sys.argv[1]  # "chapters"
-slug     = sys.argv[2]  # es. "prolusion"
+chapters = sys.argv[1]  # "Files/Chapters"
+slug     = sys.argv[2]  # es. "3_transformers"
 
 tmp_files = sorted(glob.glob(os.path.join(chapters, 'tmp-*.tex')))
 out_path  = os.path.join(chapters, f'{slug}.tex')
 
 with open(out_path, 'w') as out:
+    out.write('%!TEX root = ../main.tex\n\n')
     for f in tmp_files:
         with open(f) as inp:
             out.write(inp.read())
             out.write('\n')
 
-# Rimuovi i temporanei
 for f in tmp_files:
     os.remove(f)
 
@@ -176,15 +192,16 @@ PY
 
 Poi assembla e compila:
 ```bash
-bash ~/.claude/skills/appunti/scripts/assemble.sh "<MAIN_TEX>" "<ESAME>" "<TITOLO LEZIONE>"
+bash SKILL_DIR/scripts/assemble.sh "Files/main.tex"
 ```
 
-`assemble.sh` cerca tutti i `chapters/*.tex` non temporanei (esclude `00-index.tex` e
-`tmp-*.tex`) e li inserisce come `\input{}` in main.tex.
+`assemble.sh` prende tutti i `Files/Chapters/*.tex` di contenuto (esclude `00-index.tex` e
+`tmp-*.tex`), li ordina per numero e li inserisce come `\input{Chapters/<file>.tex}` in
+`main.tex`. Non tocca titolo, autore, copertina e sommario.
 
 Se la compilazione fallisce:
-1. Leggi il log
-2. Correggi solo il file `chapters/<SLUG>.tex` nella parte colpevole
+1. Leggi `Files/build.log`
+2. Correggi solo il file `Files/Chapters/<SLUG>.tex` nella parte colpevole
 3. Rilancia lo script — max 3 tentativi
 
 Errori tipici: `\begin{example}{...}` con graffe → usa `[...]`; `_` non escapato nel testo;
@@ -196,7 +213,7 @@ protetto nel preambolo, riformula il titolo senza virgole).
 ## Fase 5 — Report
 
 Risposta breve:
-- percorso `.tex` e `.pdf`
+- percorso `.tex` e `.pdf` (`Files/main.pdf`)
 - slide coperte / totali, quali saltate
 - eventuali punti dove hai integrato teoria non presente nelle slide
 

@@ -27,7 +27,8 @@ Scrivi come se spiegassi a un collega intelligente che non è statistico di form
 
 ## Struttura del file
 
-Ogni lezione produce **un unico file** `chapters/<slug>.tex`.
+Ogni lezione produce **un unico file** `Files/Chapters/<N_slug>.tex` (es. `3_transformers.tex`),
+che inizia con la riga `%!TEX root = ../main.tex`.
 
 ```
 \section{Nome Lezione}\label{sec:<slug>}
@@ -192,14 +193,15 @@ Are Wrong"`).
 
 ## Figure da slide
 
-Le immagini estratte sono in `Images/slide_NNN.png`. Includile **solo** per slide
+Le immagini estratte sono in `Images/L<N>/slide_NNN.png` (N = numero lezione; nel LaTeX
+`\includegraphics{L<N>/slide_NNN}`). Includile **solo** per slide
 che sono prevalentemente un diagramma, schema, flowchart o grafico — non per slide
 di solo testo o formule (quelle le scrivi in LaTeX).
 
 ```latex
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.85\textwidth]{slide_014}
+    \includegraphics[width=0.85\textwidth]{L3/slide_014}
     \caption{Agent-environment interaction loop.}
     \captionsetup{font=footnotesize}
 \end{figure}
@@ -228,5 +230,5 @@ usalo. Altrimenti usa la figura estratta.
 - `\vspace{0.2cm}` — usa `\vs`
 - Derivazioni complete se non aggiungono intuizione
 - Frasi di servizio ("In this section we will...")
-- `\includegraphics` di file non in `Images/`
+- `\includegraphics` di file non in `Files/Images/`
 - Caratteri non escapati: `_`, `%`, `&`, `#` → `\_`, `\%`, `\&`, `\#`
